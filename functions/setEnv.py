@@ -13,13 +13,13 @@ model = 'SAM6.10.10_EDMF'
 ## Test whether we are running this code on a laptop or a cluster (NERSC)
 def isLaptop():
 
-    return hostname in ['jollyjumper','tornado'] or "ucbvpn" in hostname
+    return hostname in ['jollyjumper','tornado','clarity'] or "ucbvpn" in hostname
 
 ## Return mathine name
 def getCurrentMachine():
     
     if isLaptop():
-        return "tornado"
+        return hostname
     else:
         return "coriknl"
 

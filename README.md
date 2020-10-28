@@ -51,3 +51,9 @@ are chosen using the following nomenclature:
   whose name is used as root 
 
 - figures/ contains intermediate and final figures used in the publication
+
+** Steps performed in the analysis
+
+- Run scripts/computeAndDrawSpatialStats.ipynb to derive rainfall statistics for a given simulation
+- Run scripts/computeDynamicThermodynamicComposites.ipynb to derive the decomposition using O'Gorman (2009)'s scaling approximation
+- Calculations of enhancement factors are performed directly in the notebooks when figures are generated
