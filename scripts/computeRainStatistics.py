@@ -85,8 +85,7 @@ if __name__ == "__main__":
 
     # slice to analyze
     NTmax = floor(len(data.time)/10/24)*10*24
-    # s_end = slice(NTmax-24*ndays,NTmax)
-    s_end = slice(None,24*ndays)
+    s_end = slice(NTmax-24*ndays,NTmax)
     pr = data.Prec.values[s_end,:,:]
     
     #- Compute rain distribution    
