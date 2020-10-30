@@ -5,6 +5,7 @@ Compute rainfall distributions.
 
 # load modules
 import sys,os,glob
+import re
 import matplotlib
 import matplotlib.pyplot as plt
 import xarray as xr
@@ -23,10 +24,10 @@ for includedir in [moduledir,functionsdir]:
                                      for x in glob.glob(os.path.join(includedir,'*.py'))])
 
 from conditionalstats import *
-from plot1DInvLog import *
-from plot2D import *
+#from plot1DInvLog import *
+#from plot2D import *
 from importingData import *
-from savingResults import *
+#from savingResults import *
 
 
 def getSimulationInfo(simname):
@@ -75,7 +76,8 @@ if __name__ == "__main__":
     # Load data
     filepattern_2D = os.path.join(archivedir,simname,"OUT_2D","%s_%s.2Dcom_*.nc"%(simname,Nproc))
     varids = 'Prec'
-    data = xr.open_mfdataset(filepattern_2D,decode_cf=False,data_vars=varids,combine='by_coords')
+    data = xr.open_mfdataset(filepattern_2D,decode_cf=False,data_vars=varids)
+    #data = xr.open_mfdataset(filepattern_2D,decode_cf=False,data_vars=varids,combine='by_coords')
     
     
     ##-- Compute rain statistics

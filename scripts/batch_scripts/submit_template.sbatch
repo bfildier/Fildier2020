@@ -15,6 +15,6 @@
 simname=SIMNAME
 
 module load python/3.6-anaconda-4.4
-conda activate pyLMD
+conda activate pyPhD
 
-srun python ../computeRainStatistics.py $simname
+srun python ../../computeRainStatistics.py -s $simname
