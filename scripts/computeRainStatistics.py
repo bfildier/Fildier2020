@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     # Load data
     filepattern_2D = os.path.join(archivedir,simname,"OUT_2D","%s_%s.2Dcom_*.nc"%(simname,Nproc))
-    varids = 'Prec'
+    varids = 'Prec',
     data = xr.open_mfdataset(filepattern_2D,decode_cf=False,data_vars=varids)
     #data = xr.open_mfdataset(filepattern_2D,decode_cf=False,data_vars=varids,combine='by_coords')
     
