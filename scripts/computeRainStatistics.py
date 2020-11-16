@@ -24,7 +24,7 @@ for includedir in [moduledir,functionsdir]:
                                      for x in glob.glob(os.path.join(includedir,'*.py'))])
 
 from conditionalstats import *
-#from plot1DInvLog import *
+from plot1DInvLog import *
 #from plot2D import *
 from importingData import *
 #from savingResults import *
@@ -73,11 +73,11 @@ if __name__ == "__main__":
     os.makedirs(resultdir,exist_ok=True)
     figuredir = os.path.join(os.path.dirname(moduledir),'figures')
 
-    # Load data
+    # Load 2D data
     filepattern_2D = os.path.join(archivedir,simname,"OUT_2D","%s_%s.2Dcom_*.nc"%(simname,Nproc))
     varids = 'Prec',
-    data = xr.open_mfdataset(filepattern_2D,decode_cf=False,data_vars=varids)
-    #data = xr.open_mfdataset(filepattern_2D,decode_cf=False,data_vars=varids,combine='by_coords')
+    data2D = xr.open_mfdataset(filepattern_2D,decode_cf=False,data_vars=varids)
+    #data2D = xr.open_mfdataset(filepattern_2D,decode_cf=False,data_vars=varids,combine='by_coords')
     
     
     ##-- Compute rain statistics
@@ -86,13 +86,20 @@ if __name__ == "__main__":
     print()
 
     # slice to analyze
-    NTmax = floor(len(data.time)/10/24)*10*24
+    NTmax = floor(len(data2D.time)/10/24)*10*24
     s_end = slice(NTmax-24*ndays,NTmax)
-    pr = data.Prec.values[s_end,:,:]
+    pr = data2D.Prec.values[s_end,:,:]
+    # pr = data2D.Prec.values[:24*ndays,:,:]
     
-    #- Compute rain distribution    
+    # load already computed data
+    # file_dist_pr = os.path.join(resultdir,'dist_pr_IL.pickle')
+    # f_read = open(file_dist_pr,'rb')
+    # dist_pr_IL = pickle.load(f_read)
+    
+    #- Compute rain distribution
     # Initialize
-    dist_pr_IL = Distribution(name='pr',bintype='invlogQ',fill_last_decade=True)
+    dist_pr_IL = Distribution(name='pr',bintype='invlogQ',fill_last_decade=True,
+                              distribution=None,overwrite=False)
     # Compute
     dist_pr_IL.computeDistribution(sample=pr)
     # Store locations of reference points in each bin
@@ -102,31 +109,53 @@ if __name__ == "__main__":
     # Compute bootstrapping to estimate uncertainty on percentiles
     nd_resample = 10*24 # time slices for 10 days
     dist_pr_IL.bootstrapPercentiles(sample=pr,nd_resample=nd_resample)
-    
-    # #- show
-    # fig = plt.figure(figsize=(6,5))
-    # ax = fig.add_subplot(111)
-    # sQref = slice(0,49)
-    # # subplotRanksILog(ax,dist_pr_IL.ranks[sQref],dist_pr_IL.invCDF[sQref]*100,\
-    # #                       transformX=False)
-    # subplotRanksILog(ax,dist_pr_IL.ranks[sQref],dist_pr_IL.percentiles[sQref]*100,\
-    #                       transformX=False)
-    # subplotRanksILog(ax,dist_pr_IL.ranks[sQref],dist_pr_IL.percentiles_Q1[sQref]*100,\
-    #                       transformX=False)
-    # subplotRanksILog(ax,dist_pr_IL.ranks[sQref],dist_pr_IL.percentiles_Q2[sQref]*100,\
-    #                       transformX=False)
-    # subplotRanksILog(ax,dist_pr_IL.ranks[sQref],dist_pr_IL.percentiles_Q3[sQref]*100,\
-    #                       transformX=False)
-    # x = np.flipud(1./(1-dist_pr_IL.ranks[sQref]/100.))
-    # transformXaxisIL(ax,x)
-    # # iQ_min = 4
-    # # ax.set_xlim((x[iQ_min-1],0.8))
-    # ax.set_xlabel('Percentile rank Q (%)')
-    # ax.set_ylabel('Mass fraction above percentile (%)')
-    # plt.show()
+    # Compute individual percentiles for error bar on the mean
+    dist_pr_IL.computeIndividualPercentiles(sample=pr,ranks=[5,25,50,75,95])
 
-    #- Compute mean
+    #- show
+    showfigures = False
+    if showfigures:
+        fig = plt.figure(figsize=(6,5))
+        ax = fig.add_subplot(111)
+        sQref = slice(0,49)
+        # subplotRanksILog(ax,dist_pr_IL.ranks[sQref],dist_pr_IL.invCDF[sQref]*100,\
+        #                       transformX=False)
+        subplotRanksILog(ax,dist_pr_IL.ranks[sQref],dist_pr_IL.percentiles[sQref]*100,\
+                              transformX=False)
+        subplotRanksILog(ax,dist_pr_IL.ranks[sQref],dist_pr_IL.percentiles_Q1[sQref]*100,\
+                              transformX=False)
+        subplotRanksILog(ax,dist_pr_IL.ranks[sQref],dist_pr_IL.percentiles_Q2[sQref]*100,\
+                              transformX=False)
+        subplotRanksILog(ax,dist_pr_IL.ranks[sQref],dist_pr_IL.percentiles_Q3[sQref]*100,\
+                              transformX=False)
+        x = np.flipud(1./(1-dist_pr_IL.ranks[sQref]/100.))
+        transformXaxisIL(ax,x)
+        # iQ_min = 4
+        # ax.set_xlim((x[iQ_min-1],0.8))
+        ax.set_xlabel('Percentile rank Q (%)')
+        ax.set_ylabel('Mass fraction above percentile (%)')
+        plt.show()
+    
+        fig,ax = plt.subplots()
+        subplotYShadingRanksILog(ax,dist_pr_IL.ranks[sQref],
+                                  [dist_pr_IL.percentiles_P5[sQref],dist_pr_IL.percentiles_P95[sQref]],
+                                  'k')
+        # subplotYShadingRanksILog(ax,dist_pr_IL.ranks[sQref],
+        #                          [dist_pr_IL.percentiles[sQref],dist_pr_IL.percentiles[sQref]+100],
+        #                          'k')
+        x = np.flipud(1./(1-dist_pr_IL.ranks[sQref]/100.))
+        transformXaxisIL(ax,x)
+        # iQ_min = 4
+        # ax.set_xlim((x[iQ_min-1],0.8))
+        ax.set_xlabel('Percentile rank Q (%)')
+        plt.show()
+
+    #- Compute mean rainfall
     mean_pr = np.mean(pr)
+    
+    #- Compute conditional statistics
+    Nt_shift = 1
+    
     
     ##-- Save
     print('- saving')
