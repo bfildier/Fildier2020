@@ -3,10 +3,10 @@
 here=$(dirname $0)
 scriptsdir=${here}/..
 
-for expname in `cat ${scriptsdir}/expnames`; do
+for expname in `cat ${scriptsdir}/expnames_scaling`; do
 
-    runscript=${here}/temp/submit_RS_${expname}.sbatch
-    cp ${here}/submit_RS_template.sbatch $runscript
+    runscript=${here}/temp/submit_RSCAS_${expname}.sbatch
+    cp ${here}/submit_RSCAS_template.sbatch $runscript
     
     sed -i'' "s/SIMNAME/RCE_MPDATAxTKExCAMxSAM1MOM_4000x4000x15_256x256x64_$expname/" $runscript
     
