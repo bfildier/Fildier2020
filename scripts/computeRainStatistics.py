@@ -153,9 +153,6 @@ if __name__ == "__main__":
     #- Compute mean rainfall
     mean_pr = np.mean(pr)
     
-    #- Compute conditional statistics
-    Nt_shift = 1
-    
     
     ##-- Save
     print('- saving')

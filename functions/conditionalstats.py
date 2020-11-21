@@ -88,7 +88,7 @@ class Distribution(EmptyDistribution):
     """
 
     def __init__(self,name='',bintype='linear',nbpd=10,nppb=4,nlb=50,nlr=100,\
-        fill_last_decade=False):
+        fill_last_decade=False,distribution=None,overwrite=False):
         """Constructor for class Distribution.
         Arguments:
         - name: name of reference variable
@@ -110,6 +110,12 @@ class Distribution(EmptyDistribution):
         self.bins = None
         self.density = None
         self.bin_locations_stored = False
+        self.overwrite = overwrite
+
+        if distribution is not None: # then copy it in self
+            for attr in distribution.__dict__.keys():
+                setattr(self,attr,getattr(distribution,attr)) 
+
 
     def __str__(self):
         return super().__str__()
@@ -335,6 +341,9 @@ class Distribution(EmptyDistribution):
         Returns:
             - ranks, percentiles, bins and probability densities"""
 
+        if not self.overwrite:
+            pass
+
         # Compute ranks, bins and percentiles
         self.ranksPercentilesAndBins(sample,vmin,vmax,minmode)
         # Compute probability density
@@ -404,7 +413,7 @@ class Distribution(EmptyDistribution):
         """Find indices of bins in the sample data, to go back and fetch later
         """
 
-        if self.bin_locations_stored:
+        if self.bin_locations_stored and not self.overwrite:
             pass
 
         if verbose:
@@ -431,10 +440,10 @@ class Distribution(EmptyDistribution):
 
                 # Find corresponding bin
                 i_bin = self.binIndex(percentile=sample[i])
-                
+
                 # Store only if bin was found
                 if i_bin is not None:
-                    
+
                     # Keep count
                     self.bin_sample_size[i_bin] += 1
                     # Store only if there is still room in stored locations list
@@ -464,7 +473,7 @@ class Distribution(EmptyDistribution):
                 np.random.shuffle(ind_mask)
                 # select 'sizemax' first elements
                 self.bin_locations[i_bin] = ind_mask[:sizemax]
-                self.bin_sample_size[i_bin] = sizemax
+                self.bin_sample_size[i_bin] = min(ind_mask.size,sizemax)
 
 
             if verbose: print()
@@ -540,9 +549,11 @@ class Distribution(EmptyDistribution):
         # combine distributions into statistics and save
         perc_array = np.vstack(perc_list)
         self.percentiles_sigma = np.std(perc_array,axis=0)
+        self.percentiles_P5 = np.percentile(perc_array,5,axis=0)
         self.percentiles_Q1 = np.percentile(perc_array,25,axis=0)
         self.percentiles_Q2 = np.percentile(perc_array,50,axis=0)
         self.percentiles_Q3 = np.percentile(perc_array,75,axis=0)
+        self.percentiles_P95 = np.percentile(perc_array,95,axis=0)
 
 
 class ConditionalDistribution():
@@ -620,8 +631,8 @@ class ConditionalDistribution():
         reference variable (in bins self.on.bins).
 
         Arguments:
-        - sample: if is3D, must be in format (Nz,Ncolumns), otherwise (Ncolumns,)
-        If not, format it using method formatDimensions.
+        - sample: if is3D, should be in format (Nz,Ncolumns), otherwise (Ncolumns,)
+        If not, it is formatted using method formatDimensions.
         """
 
         # Abort if sample points for each percentile has not been computed yet
