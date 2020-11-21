@@ -71,7 +71,7 @@ def get3DFilesBetweenSteps(archivedir,simname,steprange=None):
         files = []
         for file in files_all:
             step = int(file.split('_')[-1].split('.')[0])
-            if stepmin < step <= stepmax:
+            if stepmin <= step <= stepmax:
                 files.append(file)
 
     files.sort()
@@ -91,7 +91,7 @@ def getFilesBetweenSteps(archivedir,simname,datatype='STAT',steprange=None):
         files = []
         for file in files_all:
             step = int(file.split('_')[-1].split('.')[0])
-            if stepmin < step <= stepmax:
+            if stepmin <= step <= stepmax:
                 files.append(file)
 
     files.sort()
