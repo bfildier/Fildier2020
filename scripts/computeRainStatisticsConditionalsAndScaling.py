@@ -97,12 +97,12 @@ if __name__ == '__main__':
     print('- loading rain statistics')
     print()
     
-    #- mean
-    file_mean_pr = os.path.join(resultdir,'mean_pr.pickle')
-    mean_pr = pickle.load(open(file_mean_pr,'rb'))
-    #- rain stats
-    file_dist_pr = os.path.join(resultdir,'dist_pr_IL.pickle')
-    dist_pr_IL = pickle.load(open(file_dist_pr,'rb'))
+    # #- mean
+    # file_mean_pr = os.path.join(resultdir,'mean_pr.pickle')
+    # mean_pr = pickle.load(open(file_mean_pr,'rb'))
+    # #- rain stats
+    # file_dist_pr = os.path.join(resultdir,'dist_pr_IL.pickle')
+    # dist_pr_IL = pickle.load(open(file_dist_pr,'rb'))
     
 
     ##-- Compute conditional statistics
@@ -150,13 +150,32 @@ if __name__ == '__main__':
     cdist_tabs_on_pr_IL.computeConditionalMeanAndVariance(tabs)
     # cdist_qp_on_pr_IL.computeConditionalMeanAndVariance(qp)
 
-    ##-- Compute OGS09 scaling approximation
+    ##-- Compute OGS09 scaling approximation and thermodynamic/dynamic components
     pr_OGS09 = np.nan*np.zeros(len(dist_pr_IL.ranks))
+    M = np.nan*np.zeros(len(dist_pr_IL.ranks))
+    Gamma = np.nan*np.zeros(len(dist_pr_IL.ranks))
+    
     for iQ in range(len(dist_pr_IL.ranks)):
+        
+        # scaling
         w_prof = cdist_w_on_pr_IL.cond_mean[:,iQ]
         tabs_prof = cdist_tabs_on_pr_IL.cond_mean[:,iQ]
         pr_OGS09[iQ] = -scalingOGS09_zcoord(w_prof,tabs_prof,p_profile,z_coord,levdim=0)
-    
+        
+        # Crop input profiles at the tropopause
+        p_sc, tabs_sc, w_sc, z_sc = cropProfiles(p_profile*100, # Pa
+                                                 tabs_prof,
+                                                 [w_prof,z_coord.data],
+                                                 levdim=0)
+        
+        # Average mass flux
+        M[iQ] = verticalPressureIntegral(p_sc,w_sc) / verticalPressureIntegral(p_sc)
+        
+        # Thermodynamic component
+        qvstar_sc = saturationSpecificHumidity(tabs_sc,p_sc)
+        dqvs_dz = np.diff(qvstar_sc)/np.diff(z_sc)
+        Gamma[iQ] = verticalPressureIntegral(p_sc,values=w_sc,dvdp=dqvs_dz)/M[iQ]
+        
 
     #- precipitation efficiency
     def computePE(perc,scaling,sQ):
@@ -171,6 +190,12 @@ if __name__ == '__main__':
     sQ9999_99999 = slice(39,49)
     eps, ecov = computePE(dist_pr_IL.percentiles,pr_OGS09,sQ9999_99999)
 
+    # combine in a single object
+    scaling = {'OGS09': eps*pr_OGS09,
+               'eps': eps,
+               'ecov': ecov,
+               'M': M,
+               'Gamma': Gamma}
 
     ##-- Save results
     print('- saving')
@@ -188,12 +213,15 @@ if __name__ == '__main__':
     file_cdist_tabs = os.path.join(resultdir,'cdist_tabs_on_pr_IL.pickle')
     pickle.dump(cdist_tabs_on_pr_IL,open(file_cdist_tabs,'wb'))
     #- OGorman scaling approximation
-    file_eps= os.path.join(resultdir,'eps.pickle')
-    pickle.dump(eps,open(file_eps,'wb'))
-    file_ecov= os.path.join(resultdir,'ecov.pickle')
-    pickle.dump(ecov,open(file_ecov,'wb'))
-    file_pr_OGS09= os.path.join(resultdir,'pr_OGS09.pickle')
-    pickle.dump(pr_OGS09,open(file_pr_OGS09,'wb'))
+    # file_eps= os.path.join(resultdir,'eps.pickle')
+    # pickle.dump(eps,open(file_eps,'wb'))
+    # file_ecov= os.path.join(resultdir,'ecov.pickle')
+    # pickle.dump(ecov,open(file_ecov,'wb'))
+    # file_pr_OGS09= os.path.join(resultdir,'pr_OGS09.pickle')
+    # pickle.dump(pr_OGS09,open(file_pr_OGS09,'wb'))
+    file_scaling = os.path.join(resultdir,'scaling.pickle')
+    pickle.dump(scaling,open(file_scaling,'wb'))
+    
 
 
     print('Success :)')
