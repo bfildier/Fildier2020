@@ -16,8 +16,8 @@ import pickle
 from scipy.optimize import curve_fit
 
 ## Add own library to path
-# workdir = os.path.dirname(os.path.realpath(__file__))
-workdir = '/Users/bfildier/Code/analyses/Fildier2020/scripts'
+workdir = os.path.dirname(os.path.realpath(__file__))
+#workdir = '/Users/bfildier/Code/analyses/Fildier2020/scripts'
 thismodule = sys.modules[__name__]
 moduledir = os.path.join(os.path.dirname(workdir),'src')
 functionsdir = os.path.join(os.path.dirname(workdir),'functions')
@@ -80,8 +80,12 @@ if __name__ == '__main__':
     # Load 2D data
     filepattern_2D = os.path.join(archivedir,simname,"OUT_2D","%s_%s.2Dcom_*.nc"%(simname,Nproc))
     varids = 'Prec',
-    data2D = xr.open_mfdataset(filepattern_2D,decode_cf=False,data_vars=varids,combine='by_coords')
-    
+#    data2D = xr.open_mfdataset(filepattern_2D,decode_cf=False,data_vars=varids,combine='by_coords')
+    vars2D2drop = ['PBLH', 'SHF', 'LHF', 'LWNS', 'LWNSC', 'LWNT', 'LWNTC',\
+            'SOLIN', 'SWNS', 'SWNSC', 'SWNT', 'SWNTC', 'CWP', 'IWP', 'CLD', 'USFC', 'U200',\
+            'VSFC', 'V200', 'W730', 'PSFC', 'SWVP', 'U850', 'V850', 'ZC', 'TB', 'ZE']
+    data2D = xr.open_mfdataset(filepattern_2D,decode_cf=False,data_vars=varids,drop_variables=vars2D2drop)
+
     # Load 3D data
     NDmax = int(data2D.time.values[-1])
     stepmax = NDmax*24*60*60//15
@@ -90,7 +94,9 @@ if __name__ == '__main__':
     
     steprange = (stepmin-offset,stepmax-offset)
     files_in_steprange = get3DFilesBetweenSteps(archivedir,simname,steprange)
-    data3D = xr.open_mfdataset(files_in_steprange,decode_cf=False,combine='by_coords')
+#    data3D = xr.open_mfdataset(files_in_steprange,decode_cf=False,combine='by_coords')
+    vars3D2drop = ['U', 'V', 'PP', 'QRAD', 'LWU', 'LWD', 'LWUS', 'LWDS', 'QV', 'QN', 'QP']
+    data3D = xr.open_mfdataset(files_in_steprange,decode_cf=False,drop_variables=vars3D2drop)
 
     ##-- Loading rain statistics
     
@@ -116,7 +122,7 @@ if __name__ == '__main__':
     pr = data2D.Prec.values[s_end,:,:]
     w = data3D.W.values
     tabs = data3D.TABS.values
-    qp = data3D.QP.values
+#    qp = data3D.QP.values
     p_profile = np.array(np.mean(data3D.p,axis=0))
     # p_profile = np.array((data3D.p))
     z_coord = data3D.z.values
@@ -174,8 +180,7 @@ if __name__ == '__main__':
         # Thermodynamic component
         qvstar_sc = saturationSpecificHumidity(tabs_sc,p_sc)
         dqvs_dz = np.diff(qvstar_sc)/np.diff(z_sc)
-        Gamma[iQ] = verticalPressureIntegral(p_sc,values=w_sc,dvdp=dqvs_dz)/M[iQ]
-        
+        Gamma[iQ] = verticalPressureIntegral(p_sc,values=w_sc,dvdp=dqvs_dz)/M[iQ] 
 
     #- precipitation efficiency
     def computePE(perc,scaling,sQ):
@@ -190,7 +195,7 @@ if __name__ == '__main__':
     sQ9999_99999 = slice(39,49)
     eps, ecov = computePE(dist_pr_IL.percentiles,pr_OGS09,sQ9999_99999)
 
-    # combine in a single object
+    #- combine in a single object
     scaling = {'OGS09': eps*pr_OGS09,
                'eps': eps,
                'ecov': ecov,
@@ -212,17 +217,15 @@ if __name__ == '__main__':
     pickle.dump(cdist_w_on_pr_IL,open(file_cdist_w,'wb'))
     file_cdist_tabs = os.path.join(resultdir,'cdist_tabs_on_pr_IL.pickle')
     pickle.dump(cdist_tabs_on_pr_IL,open(file_cdist_tabs,'wb'))
-    #- OGorman scaling approximation
-    # file_eps= os.path.join(resultdir,'eps.pickle')
-    # pickle.dump(eps,open(file_eps,'wb'))
-    # file_ecov= os.path.join(resultdir,'ecov.pickle')
-    # pickle.dump(ecov,open(file_ecov,'wb'))
-    # file_pr_OGS09= os.path.join(resultdir,'pr_OGS09.pickle')
-    # pickle.dump(pr_OGS09,open(file_pr_OGS09,'wb'))
+    #- scaling approximation
+#    file_eps= os.path.join(resultdir,'eps.pickle')
+#    pickle.dump(eps,open(file_eps,'wb'))
+#    file_ecov= os.path.join(resultdir,'ecov.pickle')
+#    pickle.dump(ecov,open(file_ecov,'wb'))
+#    file_pr_OGS09= os.path.join(resultdir,'pr_OGS09.pickle')
+#    pickle.dump(pr_OGS09,open(file_pr_OGS09,'wb'))
     file_scaling = os.path.join(resultdir,'scaling.pickle')
     pickle.dump(scaling,open(file_scaling,'wb'))
-    
-
 
     print('Success :)')
 
