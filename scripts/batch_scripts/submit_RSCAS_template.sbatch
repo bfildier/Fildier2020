@@ -8,7 +8,7 @@
 #SBATCH --qos=regular
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --time=20:00
+#SBATCH --time=01:00:00
 ##SBATCH --mem-per-cpu=100
 #SBATCH --constraint=knl,quad,cache
 
