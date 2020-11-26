@@ -113,7 +113,6 @@ if __name__ == '__main__':
     file_dist_pr = os.path.join(resultdir,'dist_pr_IL.pickle')
     dist_pr_IL = pickle.load(open(file_dist_pr,'rb'))
     
-
     ##-- Compute conditional statistics
 
     # slice to analyze
