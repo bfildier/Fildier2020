@@ -116,7 +116,8 @@ if __name__ == '__main__':
     ##-- Compute conditional statistics
 
     # slice to analyze
-    NTmax = floor(len(data2D.time)/10/24)*10*24
+#    NTmax = floor(len(data2D.time)/10/24)*10*24
+    NTmax = NDmax*24
     s_end = slice(NTmax-24*ndays,NTmax)    
     # s_end = slice(NTmax-1,NTmax)
     
