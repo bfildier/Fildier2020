@@ -87,7 +87,10 @@ if __name__ == '__main__':
     data2D = xr.open_mfdataset(filepattern_2D,decode_cf=False,data_vars=varids,drop_variables=vars2D2drop)
 
     # Load 3D data
-    NDmax = int(data2D.time.values[-1])
+    if 'radhomo' in simname:
+        NDmax = 100
+    else:
+        NDmax = int(data2D.time.values[-1])
     stepmax = NDmax*24*60*60//15
     stepmin = stepmax - ndays*24*60*60//15
     offset = 1*60*60//15 # = 1 hr lag
@@ -95,22 +98,21 @@ if __name__ == '__main__':
     steprange = (stepmin-offset,stepmax-offset)
     files_in_steprange = get3DFilesBetweenSteps(archivedir,simname,steprange)
 #    data3D = xr.open_mfdataset(files_in_steprange,decode_cf=False,combine='by_coords')
-    vars3D2drop = ['U', 'V', 'PP', 'QRAD', 'LWU', 'LWD', 'LWUS', 'LWDS', 'QV', 'QN', 'QP']
+    vars3D2drop = ['U', 'V', 'PP', 'QRAD', 'LWU', 'LWD', 'LWUS', 'LWDS', 'QN', 'QP']
     data3D = xr.open_mfdataset(files_in_steprange,decode_cf=False,drop_variables=vars3D2drop)
 
     ##-- Loading rain statistics
     
-    print('- loading rain statistics')
-    print()
+#    print('- loading rain statistics')
+#    print()
     
-    # #- mean
-    # file_mean_pr = os.path.join(resultdir,'mean_pr.pickle')
-    # mean_pr = pickle.load(open(file_mean_pr,'rb'))
-    # #- rain stats
-    # file_dist_pr = os.path.join(resultdir,'dist_pr_IL.pickle')
-    # dist_pr_IL = pickle.load(open(file_dist_pr,'rb'))
+#    #- mean
+#    file_mean_pr = os.path.join(resultdir,'mean_pr.pickle')
+#    mean_pr = pickle.load(open(file_mean_pr,'rb'))
+#    #- rain stats
+#    file_dist_pr = os.path.join(resultdir,'dist_pr_IL.pickle')
+#    dist_pr_IL = pickle.load(open(file_dist_pr,'rb'))
     
-
     ##-- Compute conditional statistics
 
     # slice to analyze
@@ -122,7 +124,7 @@ if __name__ == '__main__':
     pr = data2D.Prec.values[s_end,:,:]
     w = data3D.W.values
     tabs = data3D.TABS.values
-#    qp = data3D.QP.values
+    qv = data3D.QV.values
     p_profile = np.array(np.mean(data3D.p,axis=0))
     # p_profile = np.array((data3D.p))
     z_coord = data3D.z.values
@@ -150,11 +152,11 @@ if __name__ == '__main__':
     # define
     cdist_w_on_pr_IL = ConditionalDistribution(name='W',is3D=True,isTime=True,on=dist_pr_IL)
     cdist_tabs_on_pr_IL = ConditionalDistribution(name='T',is3D=True,isTime=True,on=dist_pr_IL)
-    # cdist_qp_on_pr_IL = ConditionalDistribution(name='QP',is3D=True,isTime=True,on=dist_pr_IL)
+    cdist_qv_on_pr_IL = ConditionalDistribution(name='QV',is3D=True,isTime=True,on=dist_pr_IL)
     # compute
     cdist_w_on_pr_IL.computeConditionalMeanAndVariance(w)
     cdist_tabs_on_pr_IL.computeConditionalMeanAndVariance(tabs)
-    # cdist_qp_on_pr_IL.computeConditionalMeanAndVariance(qp)
+    cdist_qv_on_pr_IL.computeConditionalMeanAndVariance(qv)
 
     ##-- Compute OGS09 scaling approximation and thermodynamic/dynamic components
     pr_OGS09 = np.nan*np.zeros(len(dist_pr_IL.ranks))
@@ -183,7 +185,7 @@ if __name__ == '__main__':
         Gamma[iQ] = verticalPressureIntegral(p_sc,values=w_sc,dvdp=dqvs_dz)/M[iQ] 
 
     #- precipitation efficiency
-    def computePE(perc,scaling,sQ):
+    def computePE(perc,scaling,sQ):    
 
         x = scaling[sQ]
         y = perc[sQ]/86400
@@ -217,6 +219,8 @@ if __name__ == '__main__':
     pickle.dump(cdist_w_on_pr_IL,open(file_cdist_w,'wb'))
     file_cdist_tabs = os.path.join(resultdir,'cdist_tabs_on_pr_IL.pickle')
     pickle.dump(cdist_tabs_on_pr_IL,open(file_cdist_tabs,'wb'))
+    file_cdist_qv = os.path.join(resultdir,'cdist_qv_on_pr_IL.pickle')
+    pickle.dump(cdist_qv_on_pr_IL,open(file_cdist_qv,'wb'))
     #- scaling approximation
 #    file_eps= os.path.join(resultdir,'eps.pickle')
 #    pickle.dump(eps,open(file_eps,'wb'))
