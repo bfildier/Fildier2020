@@ -92,7 +92,7 @@ if __name__ == '__main__':
     else:
         NDmax = int(data2D.time.values[-1])
     stepmax = NDmax*24*60*60//15
-    stepmin = stepmax - ndays*24*60*60//15
+    stepmin = stepmax - (ndays*24-1)*60*60//15
     offset = 1*60*60//15 # = 1 hr lag
     
     steprange = (stepmin-offset,stepmax-offset)
@@ -103,15 +103,15 @@ if __name__ == '__main__':
 
     ##-- Loading rain statistics
     
-    print('- loading rain statistics')
-    print()
+#    print('- loading rain statistics')
+#    print()
    
-    #- mean
-    file_mean_pr = os.path.join(resultdir,'mean_pr.pickle')
-    mean_pr = pickle.load(open(file_mean_pr,'rb'))
-    #- rain stats
-    file_dist_pr = os.path.join(resultdir,'dist_pr_IL.pickle')
-    dist_pr_IL = pickle.load(open(file_dist_pr,'rb'))
+#    #- mean
+#    file_mean_pr = os.path.join(resultdir,'mean_pr.pickle')
+#    mean_pr = pickle.load(open(file_mean_pr,'rb'))
+#    #- rain stats
+#    file_dist_pr = os.path.join(resultdir,'dist_pr_IL.pickle')
+#    dist_pr_IL = pickle.load(open(file_dist_pr,'rb'))
     
     ##-- Compute conditional statistics
 
@@ -119,6 +119,7 @@ if __name__ == '__main__':
 #    NTmax = floor(len(data2D.time)/10/24)*10*24
     NTmax = NDmax*24
     s_end = slice(NTmax-24*ndays,NTmax)    
+    print('2D end slice =',s_end)
     # s_end = slice(NTmax-1,NTmax)
     
     # data
@@ -131,20 +132,20 @@ if __name__ == '__main__':
     z_coord = data3D.z.values
     
     
-#    #- pr statistics
-#    dist_pr_IL = Distribution(name='pr',bintype='invlogQ',fill_last_decade=True,
-#                              distribution=None,overwrite=False)
-#    # Compute
-#    dist_pr_IL.computeDistribution(sample=pr)
-#    # Store locations of reference points in each bin
-#    dist_pr_IL.storeSamplePoints(sample=pr,verbose=True,sizemax=500)
-#    # Compute inverse CDF on IL bins (fraction of rain mass above percentile)
-#    dist_pr_IL.computeInvCDF(sample=pr)
-#    # Compute bootstrapping to estimate uncertainty on percentiles
-#    nd_resample = 10*24 # time slices for 10 days
-#    dist_pr_IL.bootstrapPercentiles(sample=pr,nd_resample=nd_resample)
-#    # Compute individual percentiles for error bar on the mean
-#    dist_pr_IL.computeIndividualPercentiles(sample=pr,ranks=[5,25,50,75,95])
+    #- pr statistics
+    dist_pr_IL = Distribution(name='pr',bintype='invlogQ',fill_last_decade=True,
+                              distribution=None,overwrite=False)
+    # Compute
+    dist_pr_IL.computeDistribution(sample=pr)
+    # Store locations of reference points in each bin
+    dist_pr_IL.storeSamplePoints(sample=pr,verbose=True,sizemax=500)
+    # Compute inverse CDF on IL bins (fraction of rain mass above percentile)
+    dist_pr_IL.computeInvCDF(sample=pr)
+    # Compute bootstrapping to estimate uncertainty on percentiles
+    nd_resample = 10*24 # time slices for 10 days
+    dist_pr_IL.bootstrapPercentiles(sample=pr,nd_resample=nd_resample)
+    # Compute individual percentiles for error bar on the mean
+    dist_pr_IL.computeIndividualPercentiles(sample=pr,ranks=[5,25,50,75,95])
     
     #- Compute mean rainfall
     mean_pr = np.mean(pr)
