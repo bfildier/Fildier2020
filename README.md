@@ -1,8 +1,15 @@
 
 This archive gathers scripts produced in the course of the work sent for publication 
-as Fildier et al. (2020), Changing Skewness of the Rainfall Distribution with Warming, 
+as Fildier et al. (2020), Distortions of the Rain Distribution with Warming, 
 with and without Self-Aggregation
 
+This project uses a package developed for easy computation of statistical distributions and conditional statistics, that can be used for analyses of extreme rainfall and other statistical analyses in atmospheric science. Interested users should refer to: 
+
+
+    https://github.com/bfildier/conditional-stats
+
+
+--------------------------------------------------------------------------------------
 
 The structure is organized as follows:
 
