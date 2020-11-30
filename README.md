@@ -27,9 +27,7 @@ All other folders contain scripts or results related to the analysis:
 - functions/ contain user-defined python modules for tasks such as computing statistical 
   distributions, thermodynamic and physical formulas, data manipulation and plotting
 
-- scripts/ contains Jupyter notebooks used to explore the data and draw figures
-  as well as a series of bash scripts used to convert notebooks into Python scripts
-  and further automate the analysis
+- scripts/ contains scripts used to calculate statistics and notebooks used to draw figures as well as scripts used to automate the analysis in scripts/batch_scripts/
 
 - results/RCE_MPDATAxTKExCAMxSAM1MOM_4000x4000x15_256x256x64/ contains intermediate
 results used for final display, classified per simulation type. Simulation names 
@@ -54,6 +52,6 @@ are chosen using the following nomenclature:
 
 ** Steps performed in the analysis
 
-- Run scripts/computeAndDrawSpatialStats.ipynb to derive rainfall statistics for a given simulation
-- Run scripts/computeDynamicThermodynamicComposites.ipynb to derive the decomposition using O'Gorman (2009)'s scaling approximation
+- Run scripts/computeRainStatistics.py to only derive rainfall statistics for a given simulation
+- Run scripts/computeRainStatisticsConditionalsAndScaling.py to derive rain statistics, conditional statistics (composites on extreme percentiles) and the decomposition using O'Gorman (2009)'s scaling approximation
 - Calculations of enhancement factors are performed directly in the notebooks when figures are generated
