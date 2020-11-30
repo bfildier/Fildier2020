@@ -5,9 +5,12 @@ with and without Self-Aggregation
 
 This project uses a package developed for easy computation of statistical distributions and conditional statistics, that can be used for analyses of extreme rainfall and other statistical analyses in atmospheric science. Interested users should refer to: 
 
-
     https://github.com/bfildier/conditional-stats
 
+Is can be cited as:
+
+    https://zenodo.org/record/4299070
+    
 
 --------------------------------------------------------------------------------------
 
